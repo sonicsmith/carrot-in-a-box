@@ -1,19 +1,27 @@
 pragma solidity ^0.5.0;
 
+/*
+  TODO: Major issue, how about one user wants to have multiple games?
+*/
+
+
 contract CarrotInABox {
 
   struct Game {
-    address blufferAddress;
+    uint gameId;
+    address payable blufferAddress;
     uint betAmount;
     bool blufferHasCarrot;
-    bytes32 blufferMessage;
+    string blufferMessage;
   }
 
   Game[] activeGames;
   address payable owner;
+  uint gameCount;
 
   constructor() public {
     owner = msg.sender;
+    gameCount = 0;
   }
 
 
@@ -79,22 +87,23 @@ contract CarrotInABox {
     return activeGames.length;
   }
 
-  function getGameBlufferAddress(uint index) public view returns (address) {
-    return activeGames[index].blufferAddress;
+
+  function getGameIdFromIndex(uint index) public view returns (uint) {
+    return activeGames[index].gameId;
   }
 
-  function getGameBetAmount(address blufferAddress) public view returns (uint) {
+  function getGameBetAmount(uint gameId) public view returns (uint) {
     for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].blufferAddress == blufferAddress) {
+      if (activeGames[index].gameId == gameId) {
         return activeGames[index].betAmount;
       }
     }
     return 0;
   }
 
-  function getGameBlufferMessage(address blufferAddress) public view returns (bytes32) {
+  function getGameBlufferMessage(uint gameId) public view returns (string memory) {
     for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].blufferAddress == blufferAddress) {
+      if (activeGames[index].gameId == gameId) {
         return activeGames[index].blufferMessage;
       }
     }
@@ -102,8 +111,9 @@ contract CarrotInABox {
   }
 
   // Creates new game and returns index of the game
-  function createNewGame(bool blufferHasCarrot, bytes32 blufferMessage) public payable returns (uint) {
-    Game memory newGame = Game(msg.sender, msg.value, blufferHasCarrot, blufferMessage);
+  function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable returns (uint) {
+    Game memory newGame = Game(gameCount, msg.sender, msg.value, blufferHasCarrot, blufferMessage);
+    gameCount++;
     activeGames.push(newGame);
     return activeGames.length - 1;
   }
@@ -117,9 +127,9 @@ contract CarrotInABox {
   }
 
   // Returns 0 if can't find game
-  function concludeGame(address payable blufferAddress, bool swapBox) public payable returns (uint) {
+  function concludeGame(uint gameId, bool swapBox) public payable returns (uint) {
     for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].blufferAddress == blufferAddress) {
+      if (activeGames[index].gameId == gameId) {
         // Assert that our paid amount matches game bet amount
         require(msg.value == activeGames[index].betAmount);
         // payout is twice the betAmount - 1% dev fees
@@ -133,7 +143,7 @@ contract CarrotInABox {
           return 1;
         } else {
           // Guesser has lost, bluffer has won
-          blufferAddress.transfer(payout);
+          activeGames[index].blufferAddress.transfer(payout);
           removeGame(index);
           return 0;
         }

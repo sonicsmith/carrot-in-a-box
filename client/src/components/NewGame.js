@@ -1,4 +1,6 @@
 import React, { Component } from "react"
+import { TextInput } from "./TextInput"
+import { Button } from "./Button"
 
 const BET_AMOUNTS = ["0.01", "0.05", "0.1"]
 
@@ -55,16 +57,16 @@ export class NewGame extends Component {
         <h3>New Game</h3>
         {!openedBox ? (
           <div>
-            <button onClick={this.openBox}>Open Box</button>
+            <Button onClick={this.openBox} label="Open Box" />
           </div>
         ) : (
           <div>
             <p>
-              You open the box and find you {blufferHasCarrot ? "don't " : ""}
+              You open the box and find you {blufferHasCarrot ? "" : "don't"}
               have the carrot.
             </p>
             <p>You tell the other player:</p>
-            <input
+            <TextInput
               type="text"
               placeholder={"I have the carrot"}
               value={blufferMessage}
@@ -73,17 +75,19 @@ export class NewGame extends Component {
             <p>Bet amount</p>
             <BetSelector onChangeBet={this.onChangeBet} />
             <div>
-              <button
+              <Button
                 onClick={() => {
                   createNewGame(betAmount, blufferHasCarrot, blufferMessage)
                 }}
-              >
-                Submit
-              </button>
-              <button onClick={cancel}>Cancel</button>
+                label="Submit"
+              />
+              <Button onClick={cancel} label="Cancel" />
             </div>
           </div>
         )}
+        <div>
+          <Button onClick={cancel} label="Cancel" />
+        </div>
       </div>
     )
   }

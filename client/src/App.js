@@ -7,6 +7,14 @@ import "./App.css"
 import { ActiveGames } from "./components/ActiveGames"
 import { NewGame } from "./components/NewGame"
 import { ConcludeGame } from "./components/ConcludeGame.js"
+import { GameOver } from "./components/GameOver.js"
+import { Button } from "./components/Button"
+
+const LOADING = 0
+const NEW_GAME = 1
+const SHOW_ACTIVE_GAMES = 2
+const CONCLUDING_GAME = 3
+const GAME_CONCLUDED = 4
 
 class App extends Component {
   state = {
@@ -14,9 +22,9 @@ class App extends Component {
     accounts: null,
     contract: null,
     activeGames: [],
-    creatingNewGame: false,
+    gameState: null,
     concludingGame: null,
-    loading: false
+    playerWon: null
   }
 
   componentDidMount = async () => {
@@ -49,7 +57,7 @@ class App extends Component {
   }
 
   refreshView = async () => {
-    const { accounts, contract } = this.state
+    const { contract } = this.state
     const numGames = await contract.methods.getNumActiveGames().call()
     console.log("Number of active games", numGames)
     const activeGames = []
@@ -63,22 +71,27 @@ class App extends Component {
   }
 
   setStartNewGame = () => {
-    this.setState({ creatingNewGame: true })
+    this.setState({ gameState: NEW_GAME })
   }
 
   createNewGame = async (betAmount, blufferHasCarrot, blufferMessage) => {
-    this.setState({ creatingNewGame: false, loading: true })
+    this.setState({ gameState: LOADING })
     const { accounts, contract } = this.state
     const value = this.state.web3.utils.toWei(betAmount, "ether")
     await contract.methods
       .createNewGame(blufferHasCarrot, blufferMessage)
       .send({ from: accounts[0], value, gas: 300000 })
-    // console.log(index)
-    this.setState({ loading: false })
+    this.setState({ gameState: null })
+    this.refreshView()
   }
 
-  cancelNewGame = () => {
-    this.setState({ creatingNewGame: false })
+  cancel = () => {
+    this.refreshView()
+    this.setState({ gameState: null })
+  }
+
+  showActiveGames = () => {
+    this.setState({ gameState: SHOW_ACTIVE_GAMES })
   }
 
   onSelectGame = async id => {
@@ -87,39 +100,95 @@ class App extends Component {
     const blufferMessage = await contract.methods
       .getGameBlufferMessage(id)
       .call()
-    this.setState({ concludingGame: { betAmount, blufferMessage } })
+    this.setState({
+      gameState: CONCLUDING_GAME,
+      concludingGame: { betAmount, blufferMessage, id }
+    })
   }
+
+  onConclude = async swapBox => {
+    this.setState({ gameState: LOADING })
+    const { accounts, contract } = this.state
+    const { betAmount, id } = this.state.concludingGame
+    const outcome = await contract.methods
+      .concludeGame(id, swapBox)
+      .send({ from: accounts[0], value: betAmount, gas: 300000 })
+    this.setState({ gameState: GAME_CONCLUDED })
+    const { playerWon } = outcome.events.GameOutcome.returnValues
+    console.log(outcome)
+    this.setState({ playerWon })
+  }
+
+  // getDevFees = async () => {
+  //   const { accounts, contract } = this.state
+  //   const devFees = await contract.methods.getDevHoldings().call()
+  //   const outcome = await contract.methods
+  //     .transferDevHoldings()
+  //     .send({ from: accounts[0], value: 0, gas: 300000 })
+  //   console.log(devFees)
+  //   console.log(outcome)
+  // }
 
   render() {
     if (!this.state.web3) {
       return <div>Loading Web3, accounts, and contract...</div>
     }
-    return (
-      <div className="App">
-        <h1>Carrot In a Box</h1>
-        {this.state.loading ? (
-          <div className="loader" />
-        ) : this.state.concludingGame ? (
-          <div>
-            <ConcludeGame />
-          </div>
-        ) : this.state.creatingNewGame ? (
-          <div>
-            <NewGame
-              createNewGame={this.createNewGame}
-              cancel={this.cancelNewGame}
-            />
-          </div>
-        ) : (
-          <div>
+    const content = []
+    switch (this.state.gameState) {
+      case LOADING:
+        content.push(<div key="loader" className="loader" />)
+        break
+      case SHOW_ACTIVE_GAMES:
+        content.push(
+          <div key="ActiveGames">
             <ActiveGames
               activeGames={this.state.activeGames}
               onSelectGame={this.onSelectGame}
+              cancel={this.cancel}
             />
-            <button onClick={this.setStartNewGame}>New Active Game</button>
           </div>
-        )}
-        )}
+        )
+        break
+      case CONCLUDING_GAME:
+        content.push(
+          <ConcludeGame
+            key="ConcludeGame"
+            concludingGame={this.state.concludingGame}
+            onConclude={this.onConclude}
+          />
+        )
+        break
+      case NEW_GAME:
+        content.push(
+          <NewGame
+            key="NewGame"
+            createNewGame={this.createNewGame}
+            cancel={this.cancel}
+          />
+        )
+        break
+      case GAME_CONCLUDED:
+        content.push(
+          <GameOver
+            key="GameOver"
+            playerWon={this.state.playerWon}
+            cancel={this.cancel}
+          />
+        )
+        break
+      default:
+        content.push(
+          <div key="Default">
+            <p>Short instructions here about how to play the game.</p>
+            <Button onClick={this.setStartNewGame} label="New Game" />
+            <Button onClick={this.showActiveGames} label="Play Existing" />
+          </div>
+        )
+    }
+    return (
+      <div className="App">
+        <h1 key="title">Carrot In a Box</h1>
+        {content}
       </div>
     )
   }

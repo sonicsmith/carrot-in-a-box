@@ -1,11 +1,10 @@
 pragma solidity ^0.5.0;
 
-/*
-  TODO: Major issue, how about one user wants to have multiple games?
-*/
-
-
 contract CarrotInABox {
+
+  event GameOutcome(
+    bool playerWon
+  );
 
   struct Game {
     uint gameId;
@@ -111,11 +110,10 @@ contract CarrotInABox {
   }
 
   // Creates new game and returns index of the game
-  function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable returns (uint) {
+  function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable {
     Game memory newGame = Game(gameCount, msg.sender, msg.value, blufferHasCarrot, blufferMessage);
     gameCount++;
     activeGames.push(newGame);
-    return activeGames.length - 1;
   }
 
   function removeGame(uint index) internal {
@@ -127,7 +125,7 @@ contract CarrotInABox {
   }
 
   // Returns 0 if can't find game
-  function concludeGame(uint gameId, bool swapBox) public payable returns (uint) {
+  function concludeGame(uint gameId, bool swapBox) public payable {
     for (uint index = 0; index < activeGames.length; index++) {
       if (activeGames[index].gameId == gameId) {
         // Assert that our paid amount matches game bet amount
@@ -136,23 +134,24 @@ contract CarrotInABox {
         uint totalBetAmount = mul(activeGames[index].betAmount, 2);
         uint devFees = div(totalBetAmount, 100);
         uint payout = sub(totalBetAmount, devFees);
-        if (activeGames[index].blufferHasCarrot && swapBox) {
+        bool playerSwappedCorrectly = activeGames[index].blufferHasCarrot && swapBox;
+        bool playerKeptCorrectly = !activeGames[index].blufferHasCarrot && !swapBox;
+        if (playerSwappedCorrectly || playerKeptCorrectly) {
           // Guesser has won, bluffer has lost
+          emit GameOutcome(true);
           msg.sender.transfer(payout);
           removeGame(index);
-          return 1;
         } else {
           // Guesser has lost, bluffer has won
+          emit GameOutcome(false);
           activeGames[index].blufferAddress.transfer(payout);
           removeGame(index);
-          return 0;
         }
       }
     }
-    return 255;
   }
 
-  function getDevFee(bool shouldTransfer) public payable returns (uint) {
+  function getDevHoldings() public view returns (uint) {
     require(msg.sender == owner);
     uint totalInGames = 0;
     for (uint index = 0; index < activeGames.length; index++) {
@@ -161,10 +160,19 @@ contract CarrotInABox {
     uint amplifiedAmount = mul(totalInGames, 200);
     uint amountInGames = sub(amplifiedAmount, div(amplifiedAmount, 100));
     uint devFeeTotal = sub(address(this).balance, amountInGames);
-    if (shouldTransfer) {
-      owner.transfer(devFeeTotal);
-    }
     return devFeeTotal;
+  }
+
+  function transferDevHoldings() public payable {
+    require(msg.sender == owner);
+    uint totalInGames = 0;
+    for (uint index = 0; index < activeGames.length; index++) {
+      totalInGames = add(totalInGames, activeGames[index].betAmount);
+    }
+    uint amplifiedAmount = mul(totalInGames, 200);
+    uint amountInGames = sub(amplifiedAmount, div(amplifiedAmount, 100));
+    uint devFeeTotal = sub(address(this).balance, amountInGames);
+    owner.transfer(devFeeTotal);
   }
 
   function() external payable { }

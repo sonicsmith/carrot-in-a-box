@@ -1,11 +1,17 @@
 import React, { Component } from "react"
+import { Button } from "./Button"
 
 class ActiveGame extends Component {
   render() {
-    const { betAmount } = this.props
+    const { betAmount, gameId, onSelectGame } = this.props
     return (
       <div>
-        <button onClick={this.setStartNewGame}>{betAmount} ETH</button>
+        <Button
+          onClick={() => {
+            onSelectGame(gameId)
+          }}
+          label={`${betAmount} ETH`}
+        />
       </div>
     )
   }
@@ -13,16 +19,23 @@ class ActiveGame extends Component {
 
 export class ActiveGames extends Component {
   render() {
-    const { activeGames } = this.props
-    if (activeGames.length === 0) {
-      return <h2>No Active Games</h2>
-    }
-
+    const { activeGames, onSelectGame, cancel } = this.props
     return (
       <div>
-        {activeGames.map(game => (
-          <ActiveGame key={game.id} betAmount={game.betAmount} />
-        ))}
+        <h2>Active Games:</h2>
+        {activeGames.length > 0
+          ? activeGames.map(game => (
+              <ActiveGame
+                key={game.id}
+                gameId={game.id}
+                betAmount={game.betAmount}
+                onSelectGame={onSelectGame}
+              />
+            ))
+          : "No current games"}
+        <div>
+          <Button onClick={cancel} label="Back" />
+        </div>
       </div>
     )
   }

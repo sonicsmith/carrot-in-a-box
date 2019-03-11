@@ -179,18 +179,12 @@ class App extends Component {
       default:
         content.push(
           <div key="Default">
-            <p>Short instructions here about how to play the game.</p>
             <Button onClick={this.setStartNewGame} label="New Game" />
             <Button onClick={this.showActiveGames} label="Play Existing" />
           </div>
         )
     }
-    return (
-      <div className="App">
-        <h1 key="title">Carrot In a Box</h1>
-        {content}
-      </div>
-    )
+    return <div className="App">{content}</div>
   }
 }
 

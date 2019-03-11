@@ -85,9 +85,6 @@ export class NewGame extends Component {
             </div>
           </div>
         )}
-        <div>
-          <Button onClick={cancel} label="Cancel" />
-        </div>
       </div>
     )
   }

@@ -6,15 +6,20 @@ import "./App.css"
 
 import { ActiveGames } from "./components/ActiveGames"
 import { NewGame } from "./components/NewGame"
-import { ConcludeGame } from "./components/ConcludeGame.js"
-import { GameOver } from "./components/GameOver.js"
+import { ConcludeGame } from "./components/ConcludeGame"
+import { GameOver } from "./components/GameOver"
 import { Button } from "./components/Button"
+import { TopBar } from "./components/TopBar"
+import { PageBottom } from "./components/PageBottom"
+import { MainBanner } from "./components/MainBanner"
+import { About } from "./components/About"
 
 const LOADING = 0
-const NEW_GAME = 1
-const SHOW_ACTIVE_GAMES = 2
-const CONCLUDING_GAME = 3
-const GAME_CONCLUDED = 4
+const INFO_MODE = 1
+const NEW_GAME = 2
+const SHOW_ACTIVE_GAMES = 3
+const CONCLUDING_GAME = 4
+const GAME_CONCLUDED = 5
 
 class App extends Component {
   state = {
@@ -22,36 +27,30 @@ class App extends Component {
     accounts: null,
     contract: null,
     activeGames: [],
-    gameState: null,
+    gameState: INFO_MODE,
     concludingGame: null,
     playerWon: null
   }
 
-  componentDidMount = async () => {
+  setupWeb3 = async () => {
     try {
-      // Get network provider and web3 instance.
+      console.log("About to setup")
       const web3 = await getWeb3()
-
-      // Use web3 to get the user's accounts.
+      console.log("Done with web3")
       const accounts = await web3.eth.getAccounts()
-
-      // Get the contract instance.
       const networkId = await web3.eth.net.getId()
       const deployedNetwork = CarrotInABox.networks[networkId]
-
       const instance = new web3.eth.Contract(
         CarrotInABox.abi,
         deployedNetwork && deployedNetwork.address
       )
-
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance }, this.refreshView)
-    } catch (error) {
-      // Catch any errors for any of the above operations.
-      alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`
+      console.log("Done with setup")
+      this.setState(
+        { web3, accounts, contract: instance, gameState: null },
+        this.refreshView
       )
+    } catch (error) {
+      alert("Failed to initialize web3")
       console.error(error)
     }
   }
@@ -129,12 +128,18 @@ class App extends Component {
   //   console.log(outcome)
   // }
 
-  render() {
+  startDapp = async () => {
     if (!this.state.web3) {
-      return <div>Loading Web3, accounts, and contract...</div>
+      await this.setState({ gameState: LOADING })
+      await this.setupWeb3()
+      await this.setState({ gameState: null })
     }
+  }
+
+  render() {
+    const { gameState, web3 } = this.state
     const content = []
-    switch (this.state.gameState) {
+    switch (gameState) {
       case LOADING:
         content.push(<div key="loader" className="loader" />)
         break
@@ -176,6 +181,21 @@ class App extends Component {
           />
         )
         break
+      case INFO_MODE:
+        content.push(
+          <div key="InfoMode">
+            <h2 className="text-center text-uppercase text-white">Play Now</h2>
+            <hr className="star-light" />
+            <div className="column">
+              <p className="lead">
+                To play this game you need ethereum and an web3 provider, such
+                as Metamask.
+              </p>
+            </div>
+            <Button onClick={this.startDapp} label="Begin" />
+          </div>
+        )
+        break
       default:
         content.push(
           <div key="Default">
@@ -184,7 +204,28 @@ class App extends Component {
           </div>
         )
     }
-    return <div className="App">{content}</div>
+
+    const topBarLabel = gameState === INFO_MODE ? "play now" : "carrot in a box"
+    return (
+      <div className="App">
+        <TopBar label={topBarLabel} onClick={this.startDapp} />
+        {gameState === INFO_MODE && <MainBanner />}
+        {gameState === INFO_MODE && <About />}
+        <section
+          className="bg-primary text-white mb-0"
+          id="about"
+          style={{
+            height: "90vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center"
+          }}
+        >
+          <div className="container">{content}</div>
+        </section>
+        <PageBottom />
+      </div>
+    )
   }
 }
 

@@ -189,7 +189,10 @@ class App extends Component {
             <div className="column">
               <p className="lead">
                 To play this game you need ethereum and an web3 provider, such
-                as Metamask.
+                as{" "}
+                <a href="https://metamask.io/" style={{ color: "white" }}>
+                  Metamask
+                </a>
               </p>
             </div>
             <Button onClick={this.startDapp} label="Begin" />
@@ -200,6 +203,7 @@ class App extends Component {
         content.push(
           <div key="Default">
             <Button onClick={this.setStartNewGame} label="New Game" />
+            OR
             <Button onClick={this.showActiveGames} label="Play Existing" />
           </div>
         )
@@ -214,12 +218,17 @@ class App extends Component {
         <section
           className="bg-primary text-white mb-0"
           id="about"
-          style={{
-            height: "90vh",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center"
-          }}
+          style={
+            gameState === INFO_MODE
+              ? {}
+              : {
+                  height: "90vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  paddingBottom: 0
+                }
+          }
         >
           <div className="container">{content}</div>
         </section>

@@ -34,9 +34,7 @@ class App extends Component {
 
   setupWeb3 = async () => {
     try {
-      console.log("About to setup")
       const web3 = await getWeb3()
-      console.log("Done with web3")
       const accounts = await web3.eth.getAccounts()
       const networkId = await web3.eth.net.getId()
       const deployedNetwork = CarrotInABox.networks[networkId]
@@ -50,13 +48,17 @@ class App extends Component {
         this.refreshView
       )
     } catch (error) {
-      alert("Failed to initialize web3")
+      alert("Error: Could not connect to blockchain (Couldn't init web3)")
       console.error(error)
     }
   }
 
   refreshView = async () => {
     const { contract } = this.state
+    if (!contract) {
+      alert("Error: Could not connect to blockchain (Can't find contract)")
+      return
+    }
     const numGames = await contract.methods.getNumActiveGames().call()
     console.log("Number of active games", numGames)
     const activeGames = []
@@ -66,6 +68,10 @@ class App extends Component {
       const betAmount = this.state.web3.utils.fromWei(weiAmount, "ether")
       activeGames.push({ id, betAmount })
     }
+    // activeGames.push({ id: 5, betAmount: "0.1" })
+    // activeGames.push({ id: 6, betAmount: "0.1" })
+    // activeGames.push({ id: 7, betAmount: "0.1" })
+    // activeGames.push({ id: 8, betAmount: "0.1" })
     this.setState({ activeGames })
   }
 
@@ -76,7 +82,7 @@ class App extends Component {
   createNewGame = async (betAmount, blufferHasCarrot, blufferMessage) => {
     this.setState({ gameState: LOADING })
     const { accounts, contract } = this.state
-    const value = this.state.web3.utils.toWei(betAmount, "ether")
+    const value = this.state.web3.utils.toWei(betAmount || "0.01", "ether")
     await contract.methods
       .createNewGame(blufferHasCarrot, blufferMessage)
       .send({ from: accounts[0], value, gas: 300000 })
@@ -130,10 +136,10 @@ class App extends Component {
 
   startDapp = async () => {
     if (!this.state.web3) {
-      await this.setState({ gameState: LOADING })
+      this.setState({ gameState: LOADING })
       await this.setupWeb3()
-      await this.setState({ gameState: null })
     }
+    this.setState({ gameState: null })
   }
 
   render() {
@@ -160,6 +166,7 @@ class App extends Component {
             key="ConcludeGame"
             concludingGame={this.state.concludingGame}
             onConclude={this.onConclude}
+            cancel={this.cancel}
           />
         )
         break
@@ -203,7 +210,7 @@ class App extends Component {
         content.push(
           <div key="Default">
             <Button onClick={this.setStartNewGame} label="New Game" />
-            OR
+            <span style={{ padding: 8 }}>OR</span>
             <Button onClick={this.showActiveGames} label="Play Existing" />
           </div>
         )

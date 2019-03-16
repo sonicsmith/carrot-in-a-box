@@ -32,12 +32,14 @@
 }
 
 .loader {
-  border: 16px solid #f3f3f3; /* Light grey */
-  border-top: 16px solid #3498db; /* Blue */
+  border: 12px solid #f3f3f3;
+  border-top: 12px solid #d37727;
   border-radius: 50%;
   width: 100px;
   height: 100px;
   animation: spin 2s linear infinite;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @keyframes spin {
@@ -73,7 +75,7 @@
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
   color: #fff;
-  box-shadow: 0 0 40px 40px #d5a67a inset, 0 0 0 0 #d5a67a;
+  box-shadow: 0 0 45px 45px #d5a67a inset, 0 0 0 0 #d5a67a;
   transition: all 150ms ease-in-out;
 }
 .btn:hover,
@@ -83,4 +85,30 @@
 }
 .btn:hover {
   box-shadow: 0 0 10px 0 #d5a67a inset, 0 0 10px 4px #d5a67a;
+}
+
+/* speech-bubble  */
+
+.speech-bubble {
+  width: 30%;
+  position: relative;
+  background: #fff;
+  border-radius: 0.4em;
+  padding: 10px;
+  color: #000;
+}
+
+.speech-bubble:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border: 36px solid transparent;
+  border-top-color: #fff;
+  border-bottom: 0;
+  border-left: 0;
+  margin-left: -18px;
+  margin-bottom: -36px;
 }

@@ -13,10 +13,10 @@ export class About extends Component {
             <p className="lead">
               This is a game where you can win real money by betting
               crytocurrency to bluff other people that you have a carrot in your
-              box.
+              box. (Only 1% dev fees)
               <br />
-              Sound ridiculous? It is, welcome to "Carrot In A Box", the new hit
-              blockchain game.
+              Sound ridiculous? It is! Welcome to the new hit blockchain game,
+              "Carrot In A Box"
             </p>
           </div>
         </div>

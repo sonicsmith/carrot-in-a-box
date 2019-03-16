@@ -3,13 +3,21 @@ import { Button } from "./Button"
 
 export class ConcludeGame extends Component {
   render() {
-    const { onConclude, concludingGame } = this.props
+    const { onConclude, concludingGame, cancel } = this.props
     const { blufferMessage } = concludingGame
     return (
       <div>
-        <h2>ConcludeGame</h2>
-        <div>
-          <p>The other player says: "{blufferMessage}"</p>
+        <div style={{ marginTop: 16, marginBottom: 48 }}>
+          <p>
+            The other player has seen the contents of their box, and responds
+            with:{" "}
+          </p>
+          <p
+            className="speech-bubble"
+            style={{ marginLeft: "auto", marginRight: "auto" }}
+          >
+            "{blufferMessage}"
+          </p>
         </div>
         <div>Do you want to:</div>
         <div>
@@ -17,15 +25,16 @@ export class ConcludeGame extends Component {
             onClick={() => {
               onConclude(true)
             }}
-            label="Swap for their box"
+            label="Take their box"
           />
           <Button
             onClick={() => {
               onConclude(false)
             }}
-            label="Keep my box"
+            label="Keep your box"
           />
         </div>
+        <Button onClick={cancel} label="cancel" />
       </div>
     )
   }

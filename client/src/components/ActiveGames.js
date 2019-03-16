@@ -5,14 +5,23 @@ class ActiveGame extends Component {
   render() {
     const { betAmount, gameId, onSelectGame } = this.props
     return (
-      <div>
-        <Button
-          onClick={() => {
-            onSelectGame(gameId)
-          }}
-          label={`${betAmount} ETH`}
+      <button
+        className="btn"
+        style={{
+          width: 180,
+          height: 100,
+          padding: 0
+        }}
+        onClick={() => {
+          onSelectGame(gameId)
+        }}
+      >
+        <img
+          style={{ width: 80, height: 80, display: "inline-block" }}
+          src={`https://robohash.org/gameId${gameId}.png?size=70x70`}
         />
-      </div>
+        {`${betAmount} ETH`}
+      </button>
     )
   }
 }
@@ -23,16 +32,18 @@ export class ActiveGames extends Component {
     return (
       <div>
         <h2>Active Games:</h2>
-        {activeGames.length > 0
-          ? activeGames.map(game => (
-              <ActiveGame
-                key={game.id}
-                gameId={game.id}
-                betAmount={game.betAmount}
-                onSelectGame={onSelectGame}
-              />
-            ))
-          : "No current games"}
+        <div style={{ margin: 24 }}>
+          {activeGames.length > 0
+            ? activeGames.map(game => (
+                <ActiveGame
+                  key={game.id}
+                  gameId={game.id}
+                  betAmount={game.betAmount}
+                  onSelectGame={onSelectGame}
+                />
+              ))
+            : "No current games"}
+        </div>
         <div>
           <Button onClick={cancel} label="Back" />
         </div>

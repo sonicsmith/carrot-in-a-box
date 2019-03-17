@@ -17,7 +17,7 @@ class ActiveGame extends Component {
         }}
       >
         <img
-          style={{ width: 80, height: 80, display: "inline-block" }}
+          style={{ width: 70, height: 70, display: "inline-block" }}
           src={`https://robohash.org/gameId${gameId}.png?size=70x70`}
         />
         {`${betAmount} ETH`}

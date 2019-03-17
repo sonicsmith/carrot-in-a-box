@@ -19,7 +19,7 @@ export class ConcludeGame extends Component {
             "{blufferMessage}"
           </p>
         </div>
-        <div>Do you want to:</div>
+        <p>Do you want to:</p>
         <div>
           <Button
             onClick={() => {

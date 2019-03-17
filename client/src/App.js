@@ -13,6 +13,7 @@ import { TopBar } from "./components/TopBar"
 import { PageBottom } from "./components/PageBottom"
 import { MainBanner } from "./components/MainBanner"
 import { About } from "./components/About"
+import { GameSetUp } from "./components/GameSetUp"
 
 const LOADING = 0
 const INFO_MODE = 1
@@ -20,6 +21,7 @@ const NEW_GAME = 2
 const SHOW_ACTIVE_GAMES = 3
 const CONCLUDING_GAME = 4
 const GAME_CONCLUDED = 5
+const GAME_SET_UP = 6
 
 class App extends Component {
   state = {
@@ -29,7 +31,8 @@ class App extends Component {
     activeGames: [],
     gameState: INFO_MODE,
     concludingGame: null,
-    playerWon: null
+    playerWon: null,
+    newId: -1
   }
 
   setupWeb3 = async () => {
@@ -68,10 +71,6 @@ class App extends Component {
       const betAmount = this.state.web3.utils.fromWei(weiAmount, "ether")
       activeGames.push({ id, betAmount })
     }
-    // activeGames.push({ id: 5, betAmount: "0.1" })
-    // activeGames.push({ id: 6, betAmount: "0.1" })
-    // activeGames.push({ id: 7, betAmount: "0.1" })
-    // activeGames.push({ id: 8, betAmount: "0.1" })
     this.setState({ activeGames })
   }
 
@@ -83,10 +82,11 @@ class App extends Component {
     this.setState({ gameState: LOADING })
     const { accounts, contract } = this.state
     const value = this.state.web3.utils.toWei(betAmount || "0.01", "ether")
-    await contract.methods
+    const outcome = await contract.methods
       .createNewGame(blufferHasCarrot, blufferMessage)
       .send({ from: accounts[0], value, gas: 300000 })
-    this.setState({ gameState: null })
+    const { newId } = outcome.events.NewGameId.returnValues
+    this.setState({ gameState: GAME_SET_UP, newId })
     this.refreshView()
   }
 
@@ -206,9 +206,24 @@ class App extends Component {
           </div>
         )
         break
+      case GAME_SET_UP:
+        content.push(
+          <GameSetUp
+            key="GameSetUp"
+            cancel={this.cancel}
+            newId={this.state.newId}
+          />
+        )
+        break
       default:
         content.push(
           <div key="Default">
+            <p>
+              Start the game by looking in the box and bluffing?
+              <br />
+              Or choose which box to open after hearing the other players
+              account?
+            </p>
             <Button onClick={this.setStartNewGame} label="New Game" />
             <span style={{ padding: 8 }}>OR</span>
             <Button onClick={this.showActiveGames} label="Play Existing" />

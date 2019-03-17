@@ -6,6 +6,10 @@ contract CarrotInABox {
     bool playerWon
   );
 
+  event NewGameId(
+    uint newId
+  );
+
   struct Game {
     uint gameId;
     address payable blufferAddress;
@@ -109,9 +113,9 @@ contract CarrotInABox {
     return "";
   }
 
-  // Creates new game and returns index of the game
   function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable {
     Game memory newGame = Game(gameCount, msg.sender, msg.value, blufferHasCarrot, blufferMessage);
+    emit NewGameId(gameCount);
     gameCount++;
     activeGames.push(newGame);
   }
@@ -124,7 +128,6 @@ contract CarrotInABox {
     activeGames.length--;
   }
 
-  // Returns 0 if can't find game
   function concludeGame(uint gameId, bool swapBox) public payable {
     for (uint index = 0; index < activeGames.length; index++) {
       if (activeGames[index].gameId == gameId) {

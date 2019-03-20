@@ -25,13 +25,11 @@ contract TestCarrotInABox {
     uint gameId = carrotInABox.getGameIdFromIndex(0);
     uint betAmount = carrotInABox.getGameBetAmount(gameId);
     Assert.equal(betAmount, 50 finney, "It shows the correct betAmount.");
-    string blufferMessage = carrotInABox.getGameBlufferMessage(gameId);
-    Assert.equal(blufferMessage, "I have the carrot", "It shows the correct blufferMessage.");
   }
 
   function testItCompletesAnActiveWinningGame() public {
     carrotInABox.createNewGame.value(50 finney)(true, "I have carrot");
-    uint gameId = carrotInABox.getGameIdFromIndex(0);
+    uint gameId = carrotInABox.getGameIdFromIndex(1);
     carrotInABox.concludeGame.value(50 finney)(gameId, true);
     Assert.equal(address(this).balance, 949 finney, "It correctly transfers winnings.");
   }
@@ -43,10 +41,10 @@ contract TestCarrotInABox {
     Assert.equal(address(this).balance, 948 finney, "It correctly transfers winnings.");
   }
   
-  function testItCompletesAnActiveLosingGame() public {
-    uint devFee = carrotInABox.getDevFee(false);
-    Assert.equal(devFee, 1 ether - 948 finney, "It correctly returns who won.");
-  }
+  // function testItGetsCorrectAmountOfDevHoldings() public {
+  //   uint devHoldings = carrotInABox.getDevHoldings();
+  //   Assert.equal(devHoldings, 1 ether - 948 finney, "It correctly transfers dev fees.");
+  // }
 
   function() external payable { }
 

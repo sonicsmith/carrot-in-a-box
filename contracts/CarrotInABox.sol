@@ -3,7 +3,8 @@ pragma solidity ^0.5.0;
 contract CarrotInABox {
 
   event GameOutcome(
-    bool playerWon
+    bool playerWon,
+    bool error
   );
 
   event NewGameId(
@@ -42,10 +43,8 @@ contract CarrotInABox {
         if (a == 0) {
             return 0;
         }
-
         uint256 c = a * b;
         require(c / a == b);
-
         return c;
     }
 
@@ -56,8 +55,6 @@ contract CarrotInABox {
         // Solidity only automatically asserts when dividing by 0
         require(b > 0);
         uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
         return c;
     }
 
@@ -67,7 +64,6 @@ contract CarrotInABox {
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         require(b <= a);
         uint256 c = a - b;
-
         return c;
     }
 
@@ -77,7 +73,6 @@ contract CarrotInABox {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a);
-
         return c;
     }
 
@@ -94,6 +89,7 @@ contract CarrotInABox {
   function getGameIdFromIndex(uint index) public view returns (uint) {
     return activeGames[index].gameId;
   }
+
 
   function getGameBetAmount(uint gameId) public view returns (uint) {
     for (uint index = 0; index < activeGames.length; index++) {
@@ -113,19 +109,30 @@ contract CarrotInABox {
     return "";
   }
 
+  function getNextFreeGameIndex() internal view returns (uint) {
+    for (uint index = 0; index < activeGames.length; index++) {
+      if (activeGames[index].blufferAddress == address(0)) {
+        return index;
+      }
+    }
+    return 0;
+  } 
+
   function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable {
     Game memory newGame = Game(gameCount, msg.sender, msg.value, blufferHasCarrot, blufferMessage);
     emit NewGameId(gameCount);
     gameCount++;
-    activeGames.push(newGame);
+    // 
+    uint nextFreeIndex = getNextFreeGameIndex();
+    if (nextFreeIndex == 0) {
+      activeGames.push(newGame);
+    } else {
+      activeGames[nextFreeIndex] = newGame;
+    }
   }
 
   function removeGame(uint index) internal {
-    for (uint i = index; i<activeGames.length - 1; i++){
-      activeGames[i] = activeGames[i + 1];
-    }
-    delete activeGames[activeGames.length - 1];
-    activeGames.length--;
+    activeGames[index].blufferAddress = address(0);
   }
 
   function concludeGame(uint gameId, bool swapBox) public payable {
@@ -141,17 +148,19 @@ contract CarrotInABox {
         bool playerKeptCorrectly = !activeGames[index].blufferHasCarrot && !swapBox;
         if (playerSwappedCorrectly || playerKeptCorrectly) {
           // Guesser has won, bluffer has lost
-          emit GameOutcome(true);
+          emit GameOutcome(true, false);
           msg.sender.transfer(payout);
           removeGame(index);
         } else {
           // Guesser has lost, bluffer has won
-          emit GameOutcome(false);
+          emit GameOutcome(false, false);
           activeGames[index].blufferAddress.transfer(payout);
           removeGame(index);
         }
       }
     }
+    // If we are here, the player tried to conclude old game
+    emit GameOutcome(false, true);
   }
 
   function getDevHoldings() public view returns (uint) {
@@ -179,5 +188,7 @@ contract CarrotInABox {
   }
 
   function() external payable { }
+
+  function test() external payable { }
 
 }

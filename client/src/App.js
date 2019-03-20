@@ -118,10 +118,16 @@ class App extends Component {
     const outcome = await contract.methods
       .concludeGame(id, swapBox)
       .send({ from: accounts[0], value: betAmount, gas: 300000 })
-    this.setState({ gameState: GAME_CONCLUDED })
-    const { playerWon } = outcome.events.GameOutcome.returnValues
+    const { playerWon, error } = outcome.events.GameOutcome.returnValues
     console.log(outcome)
-    this.setState({ playerWon })
+    if (error) {
+      alert(
+        "Error: It looks like the game you were about to finish was completed by another player!"
+      )
+      this.setState({ gameState: null })
+    } else {
+      this.setState({ gameState: GAME_CONCLUDED, playerWon })
+    }
   }
 
   // getDevFees = async () => {

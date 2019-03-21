@@ -59,11 +59,10 @@ export class NewGame extends Component {
           <div>
             <div>
               <p style={{ margin: 16 }}>
-                <b>You</b> {stateOfCarrot} the carrot so you need to leave a
+                You <b>{stateOfCarrot}</b> the carrot so you need to leave a
                 <br />
-                message for the next player to make them {
-                  gamePlan
-                } <b>their</b> box.
+                message for the next player to make them <b>{gamePlan}</b> their
+                box.
               </p>
             </div>
             <div style={{ margin: 16 }}>

@@ -203,7 +203,10 @@ class App extends Component {
               <p className="lead">
                 To play this game you need ethereum and an web3 provider, such
                 as{" "}
-                <a href="https://metamask.io/" style={{ color: "white" }}>
+                <a
+                  href="https://metamask.io/"
+                  style={{ color: "white", textDecorationLine: "underline" }}
+                >
                   Metamask
                 </a>
               </p>

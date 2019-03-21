@@ -11,12 +11,23 @@ export class About extends Component {
           <hr className="star-dark mb-5" />
           <div className="column">
             <p className="lead">
-              This is a game where you can win real money by betting
-              crytocurrency to bluff other people that you have a carrot in your
-              box. (Only 1% dev fees)
+              Carrot In A Box is a game where you can win real money by betting
+              crytocurrency,
               <br />
-              Sound ridiculous? It is! Welcome to the new hit blockchain game,
-              "Carrot In A Box"
+              and bluffing people online that you do, or do not have a virtual
+              carrot in your box.
+              <br />
+              This "dapp" was inspired by the game played on the British TV game{" "}
+              <br />
+              show, "8 out of 10 cats". Watch now on{" "}
+              <a
+                href="https://www.youtube.com/watch?v=pB7T_J5K7_4"
+                style={{ textDecorationLine: "underline" }}
+              >
+                Youtube
+              </a>
+              <br />
+              (Only 1% dev fees)
             </p>
           </div>
         </div>

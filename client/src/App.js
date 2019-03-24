@@ -14,14 +14,16 @@ import { PageBottom } from "./components/PageBottom"
 import { MainBanner } from "./components/MainBanner"
 import { About } from "./components/About"
 import { GameSetUp } from "./components/GameSetUp"
+import { NoConnection } from "./components/NoConnection.js"
 
 const LOADING = 0
 const INFO_MODE = 1
-const NEW_GAME = 2
-const SHOW_ACTIVE_GAMES = 3
-const CONCLUDING_GAME = 4
-const GAME_CONCLUDED = 5
-const GAME_SET_UP = 6
+const NO_CONNECTION = 2
+const NEW_GAME = 3
+const SHOW_ACTIVE_GAMES = 4
+const CONCLUDING_GAME = 5
+const GAME_CONCLUDED = 6
+const GAME_SET_UP = 7
 
 class App extends Component {
   state = {
@@ -151,9 +153,20 @@ class App extends Component {
   render() {
     const { gameState, web3 } = this.state
     const content = []
-    switch (gameState) {
+    let screenState = gameState
+    if (!web3 && gameState !== INFO_MODE) {
+      screenState = NO_CONNECTION
+    }
+    switch (screenState) {
       case LOADING:
         content.push(<div key="loader" className="loader" />)
+        break
+      case NO_CONNECTION:
+        content.push(
+          <div key="NoConnection">
+            <NoConnection cancel={this.cancel} retry={this.startDapp} />
+          </div>
+        )
         break
       case SHOW_ACTIVE_GAMES:
         content.push(

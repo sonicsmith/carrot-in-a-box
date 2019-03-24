@@ -1,6 +1,16 @@
 import React, { Component } from "react"
 
-const BET_AMOUNTS = ["0.01", "0.02", "0.05", "0.10", "0.20", "0.50", "1.00"]
+const BET_AMOUNTS = [
+  "0.01",
+  "0.02",
+  "0.05",
+  "0.10",
+  "0.20",
+  "0.50",
+  "1.00",
+  "2.00",
+  "5.00"
+]
 
 export class BetSelector extends Component {
   render() {

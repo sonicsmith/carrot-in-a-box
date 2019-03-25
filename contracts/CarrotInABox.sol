@@ -12,14 +12,15 @@ contract CarrotInABox {
   );
 
   struct Game {
-    uint gameId;
     address payable blufferAddress;
     uint betAmount;
     bool blufferHasCarrot;
     string blufferMessage;
   }
 
-  Game[] activeGames;
+  mapping(uint => Game) games;
+  uint[] activeGames;
+
   address payable owner;
   uint gameCount;
 
@@ -80,88 +81,64 @@ contract CarrotInABox {
     * End of Safe Math
   */
 
-
-  function getNumActiveGames() public view returns (uint) {
-    uint numGames = 0;
-    for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].blufferAddress != address(0)) {
-        numGames = add(numGames, 1);
-      }
+  function getActiveGamesIds() public view returns (uint[] memory) {
+    uint[] memory gameIds = new uint[](activeGames.length);
+    for (uint i = 0; i < activeGames.length; i++) {
+      gameIds[i] == activeGames[i];
     }
-    return numGames;
-  }
-
-  function getGameIdFromIndex(uint index) public view returns (uint) {
-    return activeGames[index].gameId;
+    return gameIds;
   }
 
   function getGameBetAmount(uint gameId) public view returns (uint) {
-    for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].gameId == gameId) {
-        return activeGames[index].betAmount;
-      }
-    }
-    return 0;
+    games[gameId].betAmount;
   }
 
   function getGameBlufferMessage(uint gameId) public view returns (string memory) {
-    for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].gameId == gameId) {
-        return activeGames[index].blufferMessage;
-      }
-    }
-    return "";
+    games[gameId].blufferMessage;
   }
 
   function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable {
-    Game memory newGame = Game(gameCount, msg.sender, msg.value, blufferHasCarrot, blufferMessage);
+    Game memory newGame = Game(msg.sender, msg.value, blufferHasCarrot, blufferMessage);
     emit NewGameId(gameCount);
     gameCount = add(gameCount, 1);
-    // 
-    for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].blufferAddress == address(0)) {
-        activeGames[index] = newGame;
-        return;
-      }
-    }
-    activeGames.push(newGame);
+    games[gameCount] = newGame;
+    activeGames.push(gameCount);
   }
 
   function concludeGame(uint gameId, bool swapBox) public payable {
-    for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].gameId == gameId) {
-        // Assert that our paid amount matches game bet amount
-        require(msg.value == activeGames[index].betAmount);
-        // payout is twice the betAmount - 1% dev fees
-        uint totalBetAmount = mul(activeGames[index].betAmount, 2);
-        uint devFees = div(totalBetAmount, 100);
-        uint payout = sub(totalBetAmount, devFees);
-        bool playerSwappedCorrectly = activeGames[index].blufferHasCarrot && swapBox;
-        bool playerKeptCorrectly = !activeGames[index].blufferHasCarrot && !swapBox;
-        if (playerSwappedCorrectly || playerKeptCorrectly) {
-          // Guesser has won, bluffer has lost
-          emit GameOutcome(true, false);
-          msg.sender.transfer(payout);
-          activeGames[index].blufferAddress = address(0);
-          return;
-        } else {
-          // Guesser has lost, bluffer has won
-          emit GameOutcome(false, false);
-          activeGames[index].blufferAddress.transfer(payout);
-          activeGames[index].blufferAddress = address(0);
-          return;
-        }
+    // Assert that our paid amount matches game bet amount
+    require(msg.value == games[gameId].betAmount);
+    // payout is twice the betAmount - 1% dev fees
+    uint totalBetAmount = mul(games[gameId].betAmount, 2);
+    uint devFees = div(totalBetAmount, 100);
+    uint payout = sub(totalBetAmount, devFees);
+    bool playerSwappedCorrectly = games[gameId].blufferHasCarrot && swapBox;
+    bool playerKeptCorrectly = !games[gameId].blufferHasCarrot && !swapBox;
+    if (playerSwappedCorrectly || playerKeptCorrectly) {
+      // Guesser has won, bluffer has lost
+      emit GameOutcome(true, false);
+      msg.sender.transfer(payout);
+    } else {
+      // Guesser has lost, bluffer has won
+      emit GameOutcome(false, false);
+      games[gameId].blufferAddress.transfer(payout);
+    }
+    uint index;
+    for (uint i = 0; i < activeGames.length; i++) {
+      if (activeGames[i] == gameId) {
+        index = i;
+        break;
       }
     }
-    // If we are here, the player tried to conclude old game
-    emit GameOutcome(false, true);
+    activeGames[index] = activeGames[sub(activeGames.length, 1)];
+    activeGames.length = sub(activeGames.length, 1);
   }
 
   function getDevHoldings() public view returns (uint) {
     require(msg.sender == owner);
     uint totalInGames = 0;
     for (uint index = 0; index < activeGames.length; index++) {
-      totalInGames = add(totalInGames, activeGames[index].betAmount);
+      totalInGames = add(totalInGames, games[activeGames[index]].betAmount);
     }
     uint amplifiedAmount = mul(totalInGames, 200);
     uint amountInGames = sub(amplifiedAmount, div(amplifiedAmount, 100));

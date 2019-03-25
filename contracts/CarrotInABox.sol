@@ -82,14 +82,18 @@ contract CarrotInABox {
 
 
   function getNumActiveGames() public view returns (uint) {
-    return activeGames.length;
+    uint numGames = 0;
+    for (uint index = 0; index < activeGames.length; index++) {
+      if (activeGames[index].blufferAddress != address(0)) {
+        numGames = add(numGames, 1);
+      }
+    }
+    return numGames;
   }
-
 
   function getGameIdFromIndex(uint index) public view returns (uint) {
     return activeGames[index].gameId;
   }
-
 
   function getGameBetAmount(uint gameId) public view returns (uint) {
     for (uint index = 0; index < activeGames.length; index++) {
@@ -109,30 +113,18 @@ contract CarrotInABox {
     return "";
   }
 
-  function getNextFreeGameIndex() internal view returns (uint) {
-    for (uint index = 0; index < activeGames.length; index++) {
-      if (activeGames[index].blufferAddress == address(0)) {
-        return index;
-      }
-    }
-    return 0;
-  } 
-
   function createNewGame(bool blufferHasCarrot, string memory blufferMessage) public payable {
     Game memory newGame = Game(gameCount, msg.sender, msg.value, blufferHasCarrot, blufferMessage);
     emit NewGameId(gameCount);
-    gameCount++;
+    gameCount = add(gameCount, 1);
     // 
-    uint nextFreeIndex = getNextFreeGameIndex();
-    if (nextFreeIndex == 0) {
-      activeGames.push(newGame);
-    } else {
-      activeGames[nextFreeIndex] = newGame;
+    for (uint index = 0; index < activeGames.length; index++) {
+      if (activeGames[index].blufferAddress == address(0)) {
+        activeGames[index] = newGame;
+        return;
+      }
     }
-  }
-
-  function removeGame(uint index) internal {
-    activeGames[index].blufferAddress = address(0);
+    activeGames.push(newGame);
   }
 
   function concludeGame(uint gameId, bool swapBox) public payable {
@@ -150,12 +142,14 @@ contract CarrotInABox {
           // Guesser has won, bluffer has lost
           emit GameOutcome(true, false);
           msg.sender.transfer(payout);
-          removeGame(index);
+          activeGames[index].blufferAddress = address(0);
+          return;
         } else {
           // Guesser has lost, bluffer has won
           emit GameOutcome(false, false);
           activeGames[index].blufferAddress.transfer(payout);
-          removeGame(index);
+          activeGames[index].blufferAddress = address(0);
+          return;
         }
       }
     }
@@ -177,18 +171,10 @@ contract CarrotInABox {
 
   function transferDevHoldings() public payable {
     require(msg.sender == owner);
-    uint totalInGames = 0;
-    for (uint index = 0; index < activeGames.length; index++) {
-      totalInGames = add(totalInGames, activeGames[index].betAmount);
-    }
-    uint amplifiedAmount = mul(totalInGames, 200);
-    uint amountInGames = sub(amplifiedAmount, div(amplifiedAmount, 100));
-    uint devFeeTotal = sub(address(this).balance, amountInGames);
+    uint devFeeTotal = getDevHoldings();
     owner.transfer(devFeeTotal);
   }
 
   function() external payable { }
-
-  function test() external payable { }
 
 }

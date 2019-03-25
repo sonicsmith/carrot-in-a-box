@@ -2,7 +2,7 @@ const path = require("path")
 var HDWalletProvider = require("truffle-hdwallet-provider")
 var secrets = require("./secrets")
 var mnemonic = secrets.mnemonic
-var infuraAccessToken = secrets.infuraAccessToken
+var infuraProjectId = secrets.infuraProjectId
 
 module.exports = {
   contracts_build_directory: path.join(__dirname, "client/src/contracts"),
@@ -16,10 +16,20 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(
           mnemonic,
-          "https://ropsten.infura.io/" + infuraAccessToken
+          "https://ropsten.infura.io/v3/" + infuraProjectId
         )
       },
       network_id: 3,
+      gas: 4000000
+    },
+    live: {
+      provider: function() {
+        return new HDWalletProvider(
+          mnemonic,
+          "https://mainnet.infura.io/v3/" + infuraProjectId
+        )
+      },
+      network_id: 1,
       gas: 4000000
     }
   }
